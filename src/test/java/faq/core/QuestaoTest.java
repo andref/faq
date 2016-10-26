@@ -1,4 +1,4 @@
-package faq;
+package faq.core;
 
 import org.junit.Test;
 
