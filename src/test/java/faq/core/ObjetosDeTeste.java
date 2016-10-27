@@ -13,6 +13,12 @@ public final class ObjetosDeTeste {
         return q;
     }
 
+    public Questao questaoComPergunta(String pergunta) {
+        Questao questao = questao();
+        questao.setPergunta(pergunta);
+        return questao;
+    }
+
     public Categoria categoria() {
         Categoria c = new Categoria();
         c.setTitulo("Patinhos");

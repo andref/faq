@@ -96,7 +96,7 @@ public class CriarSessionFactory {
         return this;
     }
 
-    public CriarSessionFactory criarBanco() {
+    public CriarSessionFactory construirBanco() {
         c.setProperty(AvailableSettings.HBM2DDL_AUTO, "create");
         return this;
     }

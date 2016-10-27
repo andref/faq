@@ -1,5 +1,6 @@
 package faq.core;
 
+import com.google.common.base.Strings;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.validator.constraints.NotBlank;
 
@@ -58,7 +59,7 @@ public class Questao {
     }
 
     public void setPergunta(String pergunta) {
-        this.pergunta = pergunta;
+        this.pergunta = Strings.emptyToNull(pergunta);
     }
 
     public String getResposta() {
@@ -66,7 +67,7 @@ public class Questao {
     }
 
     public void setResposta(String resposta) {
-        this.resposta = resposta;
+        this.resposta = Strings.emptyToNull(resposta);
     }
 
     public Collection<Questao> getQuestoesRelacionadas() {
@@ -107,7 +108,7 @@ public class Questao {
     }
 
     public void setAutor(String autor) {
-        this.autor = autor;
+        this.autor = Strings.emptyToNull(autor);
     }
 
     public LocalDate getDataDePublicacao() {
