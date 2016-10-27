@@ -2,7 +2,10 @@ server:
   type: default
   applicationConnectors:
     - type: http
-      port: 8080
+      port: 0
+  adminConnectors:
+    - type: http
+      port: 0
 
 database:
   driverClass: org.h2.Driver
@@ -10,6 +13,8 @@ database:
   validationQuery: select 1
   checkConnectionWhileIdle: true
   properties:
-    hibernate.hbm2ddl.auto: create
     hibernate.show_sql: true
     hibernate.format_sql: true
+
+logging:
+  level: WARN

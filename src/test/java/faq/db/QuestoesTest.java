@@ -2,10 +2,6 @@ package faq.db;
 
 import faq.core.ObjetosDeTeste;
 import faq.core.Questao;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.context.internal.ThreadLocalSessionContext;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -23,45 +19,27 @@ public class QuestoesTest {
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
+    @Rule
+    public Persistencia db = Persistencia.padrao();
+
     private ObjetosDeTeste criar = new ObjetosDeTeste();
-    private SessionFactory factory;
-    private Session session;
     private Questoes questoes;
 
     @Before
     public void setUp() throws Exception {
-        factory = CriarSessionFactory.paraH2EmMemoria("teste")
-                                     .comEntidadesNoPacote("faq.core")
-                                     .construirBanco()
-                                     .mostrarSQL()
-                                     .getSessionFactory();
-
-        questoes = new Questoes(factory);
-
-        session = factory.openSession();
-        ThreadLocalSessionContext.bind(session);
-        session.getTransaction().begin();
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        session.getTransaction().commit();
-        session.close();
-        factory.close();
-        ThreadLocalSessionContext.unbind(factory);
+        questoes = new Questoes(db.getSessionFactory());
     }
 
     @Test
-    public void todasRecuperaDeFatoTodasAsQuestões() throws Exception {
+    public void listarRecuperaTodasAsQuestões() throws Exception {
 
         Stream.of("Pergunta 1?", "Pergunta 2?", "Pergunta 3?")
               .map(criar::questaoComPergunta)
               .forEach(questoes::persistir);
 
-        session.flush();
-        session.clear();
+        db.flushAndClear();
 
-        List<Questao> todas = questoes.todas();
+        List<Questao> todas = questoes.listar();
 
         assertThat(todas).hasSize(3);
     }
@@ -71,12 +49,11 @@ public class QuestoesTest {
         Questao questao = criar.questao();
         questoes.persistir(questao);
 
-        session.flush();
-        session.clear();
+        db.flushAndClear();
 
         assertThat(questao.getId()).isNotNull();
 
-        Questao questaoRecuperada = session.get(Questao.class, questao.getId());
+        Questao questaoRecuperada = db.get(Questao.class, questao.getId());
 
         assertThat(questaoRecuperada.getId()).isEqualByComparingTo(questao.getId());
     }
@@ -118,13 +95,23 @@ public class QuestoesTest {
     }
 
     @Test
+    public void persistirNãoPermiteQuestãoComPerguntaDuplicada() throws Exception {
+        Questao primeira = criar.questao();
+        questoes.persistir(primeira);
+
+        db.flushAndClear();
+
+        Questao segunda = criar.questao();
+        questoes.persistir(segunda);
+
+        thrown.expect(org.hibernate.exception.ConstraintViolationException.class);
+    }
+
+    @Test
     public void persistirPermiteQuestãoSemAutor() throws Exception {
         Questao questao = criar.questao();
         questao.setAutor(null);
         questoes.persistir(questao);
-
-        session.flush();
-        session.clear();
     }
 
     @Test
@@ -132,8 +119,7 @@ public class QuestoesTest {
         Questao questao = criar.questao();
         questoes.persistir(questao);
 
-        session.flush();
-        session.clear();
+        db.flushAndClear();
 
         Optional<Questao> optQuestao = questoes.porId(questao.getId());
 
@@ -147,18 +133,41 @@ public class QuestoesTest {
         Questao questao = criar.questao();
         questoes.persistir(questao);
 
-        session.flush();
-        session.clear();
+        db.flushAndClear();
 
         Questao recuperada = questoes.porId(questao.getId()).orElseThrow(AssertionError::new);
 
         questoes.excluir(recuperada);
 
-        session.flush();
-        session.clear();
+        db.flushAndClear();
 
         Optional<Questao> optQuestao = questoes.porId(questao.getId());
 
         assertThat(optQuestao).isEmpty();
+    }
+
+    @Test
+    public void excluirRemoveQuestãoDaListaDeRelacionadasDeOutrasQuestões() throws Exception {
+        Questao questao1 = criar.questaoComPergunta("P1?");
+        Questao questao2 = criar.questaoComPergunta("P2?");
+        Questao relacionada = criar.questaoComPergunta("R?");
+
+        questao1.adicionarQuestaoRelacionada(relacionada);
+        questao2.adicionarQuestaoRelacionada(relacionada);
+
+        db.persistFlushAndClear(questao1, questao2, relacionada);
+
+        Questao recuperada = questoes.porId(relacionada.getId()).orElseThrow(AssertionError::new);
+
+        questoes.excluir(recuperada);
+
+        db.flushAndClear();
+
+        db.refresh(questao1, questao2);
+
+        assertThat(questao1.getQuestoesRelacionadas()).extracting(Questao::getId)
+                                                      .doesNotContain(relacionada.getId());
+        assertThat(questao2.getQuestoesRelacionadas()).extracting(Questao::getId)
+                                                      .doesNotContain(relacionada.getId());
     }
 }

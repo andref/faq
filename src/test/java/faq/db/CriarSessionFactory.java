@@ -8,26 +8,19 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.dialect.Dialect;
 
-import javax.persistence.AttributeConverter;
 import javax.persistence.Entity;
 import java.io.File;
 import java.io.IOException;
-import java.sql.Driver;
 import java.util.function.Consumer;
 
-import static java.text.MessageFormat.format;
+import static java.lang.String.format;
 
 /**
  * Este utilitário permite criar rapidamente um session factory do Hibernate para uso em testes.
  */
 public class CriarSessionFactory {
     private final Configuration c;
-
-    public CriarSessionFactory() {
-        this(new Configuration());
-    }
 
     @VisibleForTesting
     CriarSessionFactory(Configuration configuration) {
@@ -43,7 +36,6 @@ public class CriarSessionFactory {
 
     public static CriarSessionFactory paraH2EmMemoria(String banco) {
         Configuration c = new Configuration();
-        c.setProperty(AvailableSettings.DIALECT, "org.hibernate.dialect.H2Dialect");
         c.setProperty(AvailableSettings.DRIVER, "org.h2.Driver");
         c.setProperty(AvailableSettings.URL, urlParaH2EmMemoria(banco));
         return new CriarSessionFactory(c);
@@ -51,7 +43,6 @@ public class CriarSessionFactory {
 
     public static CriarSessionFactory paraH2EmMemoria(Server server, String banco) {
         Configuration c = new Configuration();
-        c.setProperty(AvailableSettings.DIALECT, "org.hibernate.dialect.H2Dialect");
         c.setProperty(AvailableSettings.DRIVER, "org.h2.Driver");
         c.setProperty(AvailableSettings.URL, urlParaH2EmMemoria(server, banco));
         return new CriarSessionFactory(c);
@@ -63,37 +54,6 @@ public class CriarSessionFactory {
         c.setProperty(AvailableSettings.DRIVER, "org.h2.Driver");
         c.setProperty(AvailableSettings.URL, urlParaH2EmArquivo(server, databaseFile));
         return new CriarSessionFactory(c);
-    }
-
-    public CriarSessionFactory comPropriedade(String nome, String valor) {
-        c.setProperty(nome, valor);
-        return this;
-    }
-
-    public CriarSessionFactory comDialeto(Class<? extends Dialect> dialeto) {
-        c.setProperty(AvailableSettings.DIALECT, dialeto.getName());
-        return this;
-    }
-
-    public CriarSessionFactory comDriver(Class<? extends Driver> driver) {
-        c.setProperty(AvailableSettings.DRIVER, driver.getName());
-        return this;
-    }
-
-    public CriarSessionFactory esquemaPadrao(String esquema) {
-        c.setProperty(AvailableSettings.DEFAULT_CATALOG, esquema);
-        return this;
-    }
-
-    public CriarSessionFactory autenticarComo(String usuario, String senha) {
-        c.setProperty(AvailableSettings.USER, usuario);
-        c.setProperty(AvailableSettings.PASS, senha);
-        return this;
-    }
-
-    public CriarSessionFactory comConversor(Class<? extends AttributeConverter<?, ?>> classe) {
-        c.addAttributeConverter(classe);
-        return this;
     }
 
     public CriarSessionFactory construirBanco() {
