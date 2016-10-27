@@ -1,12 +1,43 @@
 package faq.core;
 
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.validator.constraints.NotBlank;
+
+import javax.persistence.*;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.util.*;
 
+@Entity
 public class Categoria {
 
+    @Id
+    @GeneratedValue(generator = "uuid2")
+    @GenericGenerator(name = "uuid2", strategy = "uuid2")
+    private UUID id;
+
+    @NotBlank
+    @NotNull
+    @Size(max = 100)
+    @Column(nullable = false, unique = true, length = 100)
     private String titulo;
+
+    @NotBlank
+    @NotNull
+    @Size(max = 1000)
+    @Column(nullable = false, length = 1000)
     private String descricao;
+
+    @ManyToMany
     List<Questao> questoes = new ArrayList<>();
+
+    public UUID getId() {
+        return id;
+    }
+
+    void setId(UUID id) {
+        this.id = id;
+    }
 
     public String getTitulo() {
         return titulo;

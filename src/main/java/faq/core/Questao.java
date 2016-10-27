@@ -1,23 +1,65 @@
 package faq.core;
 
+import com.google.common.base.Strings;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.validator.constraints.NotBlank;
+
+import javax.persistence.*;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.time.LocalDate;
 import java.util.*;
 
+@Entity
 public class Questao {
 
+    @Id
+    @GeneratedValue(generator = "uuid2")
+    @GenericGenerator(name = "uuid2", strategy = "uuid2")
+    private UUID id;
+
+    @NotBlank
+    @NotNull
+    @Size(max = 1000)
+    @Column(nullable = false, unique = true, length = 1000)
     private String pergunta;
+
+    @NotBlank
+    @NotNull
+    @Size(max = 10000)
+    @Column(nullable = false, length = 10000)
     private String resposta;
+
+    @ManyToMany
     private List<Questao> questoesRelacionadas = new ArrayList<>();
+
+    @ManyToMany
     List<Categoria> categorias = new ArrayList<>();
+
     private String autor;
+
+    @NotNull
+    @Column(nullable = false)
     private LocalDate dataDePublicacao;
+
+    @Version
+    @Column(nullable = false)
+    private int versao;
+
+    public UUID getId() {
+        return id;
+    }
+
+    void setId(UUID id) {
+        this.id = id;
+    }
 
     public String getPergunta() {
         return pergunta;
     }
 
     public void setPergunta(String pergunta) {
-        this.pergunta = pergunta;
+        this.pergunta = Strings.emptyToNull(pergunta);
     }
 
     public String getResposta() {
@@ -25,7 +67,7 @@ public class Questao {
     }
 
     public void setResposta(String resposta) {
-        this.resposta = resposta;
+        this.resposta = Strings.emptyToNull(resposta);
     }
 
     public Collection<Questao> getQuestoesRelacionadas() {
@@ -66,7 +108,7 @@ public class Questao {
     }
 
     public void setAutor(String autor) {
-        this.autor = autor;
+        this.autor = Strings.emptyToNull(autor);
     }
 
     public LocalDate getDataDePublicacao() {
