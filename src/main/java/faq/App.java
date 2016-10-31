@@ -1,11 +1,13 @@
 package faq;
 
+import faq.db.Questoes;
 import faq.resources.QuestaoResource;
 import io.dropwizard.Application;
 import io.dropwizard.db.PooledDataSourceFactory;
 import io.dropwizard.hibernate.ScanningHibernateBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import org.hibernate.SessionFactory;
 
 public class App extends Application<AppConfig> {
 
@@ -23,7 +25,9 @@ public class App extends Application<AppConfig> {
 
     @Override
     public void run(AppConfig configuration, Environment environment) throws Exception {
-        environment.jersey().register(new QuestaoResource());
+        SessionFactory sessionFactory = hibernate.getSessionFactory();
+        Questoes questoes = new Questoes(sessionFactory);
+        environment.jersey().register(new QuestaoResource(questoes));
     }
 
     public static void main(String[] args) throws Exception {
