@@ -25,4 +25,10 @@ public final class ObjetosDeTeste {
         c.setDescricao("Patinhos são pequenas aves que nadam e voam.");
         return c;
     }
+
+    public Categoria categoriaComTitulo(String titulo) {
+        Categoria categoria = categoria();
+        categoria.setTitulo(titulo);
+        return categoria;
+    }
 }
