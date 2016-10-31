@@ -36,6 +36,8 @@ public class Questao {
     @ManyToMany
     List<Categoria> categorias = new ArrayList<>();
 
+    @Size(max = 500)
+    @Column(length = 500)
     private String autor;
 
     @NotNull

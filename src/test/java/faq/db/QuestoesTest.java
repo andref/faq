@@ -61,7 +61,7 @@ public class QuestoesTest {
         session.flush();
         session.clear();
 
-        List<Questao> todas = questoes.todas();
+        List<Questao> todas = questoes.listar();
 
         assertThat(todas).hasSize(3);
     }

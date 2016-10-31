@@ -1,8 +1,12 @@
 package faq.resources;
 
 import com.codahale.metrics.annotation.Timed;
+import faq.api.CategoriaTO;
+import faq.api.ItemComId;
+import faq.api.QuestaoTO;
 import faq.core.Categoria;
 import faq.core.Questao;
+import faq.db.Categorias;
 import faq.db.Questoes;
 import io.dropwizard.hibernate.UnitOfWork;
 
@@ -12,10 +16,12 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Path("questoes")
 @Produces(MediaType.APPLICATION_JSON)
@@ -23,29 +29,38 @@ import java.util.UUID;
 public class QuestaoResource {
 
     private final Questoes questoes;
+    private final Categorias categorias;
 
-    public QuestaoResource(Questoes questoes) {
+    public QuestaoResource(Questoes questoes, Categorias categorias) {
         this.questoes = questoes;
+        this.categorias = categorias;
     }
 
     @GET
     @Timed
     @UnitOfWork(readOnly = true)
-    public List<Questao> recuperarTodas() {
-        return questoes.todas();
+    public List<QuestaoTO> recuperarTodas() {
+        return questoes.listar()
+                       .stream()
+                       .map(QuestaoTO::new)
+                       .collect(Collectors.toList());
     }
 
     @GET
     @Timed
     @Path("{id}")
     @UnitOfWork(readOnly = true)
-    public Optional<Questao> recuperarPorId(@PathParam("id") UUID id) {
-        return questoes.porId(id);
+    public Optional<QuestaoTO> recuperarPorId(@PathParam("id") UUID id) {
+        return questoes.porId(id)
+                       .map(QuestaoTO::new);
     }
 
     @POST
     @UnitOfWork
-    public Response inserir(@Valid Questao questao) {
+    public Response inserir(@Valid QuestaoTO questaoTO) {
+        Questao questao = questaoTO.atualizar(new Questao());
+        questao.setDataDePublicacao(LocalDate.now());
+
         questoes.persistir(questao);
 
         URI uri = UriBuilder.fromResource(QuestaoResource.class)
@@ -53,7 +68,7 @@ public class QuestaoResource {
                             .build(questao.getId());
 
         return Response.created(uri)
-                       .entity(questao)
+                       .entity(new QuestaoTO(questao))
                        .build();
     }
 
@@ -69,25 +84,41 @@ public class QuestaoResource {
     @PUT
     @UnitOfWork
     @Path("{id}")
-    public Response alterar(@PathParam("id") UUID id, @Valid Questao questao) {
-        return Response.status(Response.Status.NOT_IMPLEMENTED).build();
+    public Response alterar(@PathParam("id") UUID id, @Valid QuestaoTO questaoTO) {
+        Questao questao = questoes.porId(id)
+                                  .orElseThrow(NotFoundException::new);
+        questaoTO.atualizar(questao);
+
+        URI uri = UriBuilder.fromResource(QuestaoResource.class)
+                            .path(QuestaoResource.class, "recuperarPorId")
+                            .build(questao.getId());
+
+        return Response.seeOther(uri).build();
     }
 
     @GET
     @Timed
     @UnitOfWork(readOnly = true)
     @Path("{id}/categorias")
-    public Collection<Categoria> recuperarCategorias(@PathParam("id") UUID id) {
+    public Collection<CategoriaTO> recuperarCategorias(@PathParam("id") UUID id) {
         Questao questao = questoes.porId(id)
                                   .orElseThrow(NotFoundException::new);
-        return questao.getCategorias();
+        return questao.getCategorias()
+                      .stream()
+                      .map(CategoriaTO::new)
+                      .collect(Collectors.toList());
     }
 
     @POST
     @UnitOfWork
     @Path("{id}/categorias")
-    public Response vincularCategoria(@PathParam("id") UUID id) {
-        return Response.status(Response.Status.NOT_IMPLEMENTED).build();
+    public void vincularCategoria(@PathParam("id") UUID id, @Valid ItemComId item) {
+        Questao questao = questoes.porId(id)
+                                  .orElseThrow(NotFoundException::new);
+        Categoria categoria = categorias.porId(item.id)
+                                        .orElseThrow(NotFoundException::new);
+
+        questao.adicionarCategoria(categoria);
     }
 
     @DELETE
@@ -119,8 +150,12 @@ public class QuestaoResource {
     @POST
     @UnitOfWork
     @Path("{id}/rel")
-    public Response vincularRelacionada(@PathParam("id") UUID id) {
-        return Response.status(Response.Status.NOT_IMPLEMENTED).build();
+    public void vincularRelacionada(@PathParam("id") UUID id, @Valid ItemComId item) {
+        Questao questao = questoes.porId(id)
+                                  .orElseThrow(NotFoundException::new);
+        Questao relacionada = questoes.porId(item.id)
+                                      .orElseThrow(NotFoundException::new);
+        questao.adicionarQuestaoRelacionada(relacionada);
     }
 
     @DELETE

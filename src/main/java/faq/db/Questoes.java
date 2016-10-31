@@ -14,7 +14,7 @@ public class Questoes extends AbstractDAO<Questao> {
         super(sessionFactory);
     }
 
-    public List<Questao> todas() {
+    public List<Questao> listar() {
         return list(criteria());
     }
 

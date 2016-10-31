@@ -1,7 +1,9 @@
 package faq;
 
 import faq.db.Questoes;
+import faq.db.Categorias;
 import faq.resources.QuestaoResource;
+import faq.resources.CategoriaResource;
 import io.dropwizard.Application;
 import io.dropwizard.db.PooledDataSourceFactory;
 import io.dropwizard.hibernate.ScanningHibernateBundle;
@@ -27,7 +29,10 @@ public class App extends Application<AppConfig> {
     public void run(AppConfig configuration, Environment environment) throws Exception {
         SessionFactory sessionFactory = hibernate.getSessionFactory();
         Questoes questoes = new Questoes(sessionFactory);
-        environment.jersey().register(new QuestaoResource(questoes));
+        Categorias categorias = new Categorias(sessionFactory);
+
+        environment.jersey().register(new QuestaoResource(questoes, categorias));
+        environment.jersey().register(new CategoriaResource(categorias));
     }
 
     public static void main(String[] args) throws Exception {

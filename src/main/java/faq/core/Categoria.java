@@ -22,10 +22,8 @@ public class Categoria {
     @Column(nullable = false, unique = true, length = 100)
     private String titulo;
 
-    @NotBlank
-    @NotNull
     @Size(max = 1000)
-    @Column(nullable = false, length = 1000)
+    @Column(length = 1000)
     private String descricao;
 
     @ManyToMany
