@@ -1,5 +1,6 @@
 package faq.core;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.validator.constraints.NotBlank;
@@ -119,5 +120,12 @@ public class Questao {
 
     public void setDataDePublicacao(LocalDate dataDePublicacao) {
         this.dataDePublicacao = dataDePublicacao;
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                          .addValue(pergunta)
+                          .toString();
     }
 }

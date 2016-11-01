@@ -8,29 +8,40 @@ import org.hibernate.context.internal.ThreadLocalSessionContext;
 import org.junit.rules.ExternalResource;
 
 import java.io.Serializable;
+import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class Persistencia extends ExternalResource {
 
     private final Supplier<SessionFactory> supplier;
     private SessionFactory sessionFactory;
+    private Consumer<Session> povoador = s -> {
+    };
 
     public Persistencia(Supplier<SessionFactory> supplier) {
         this.supplier = supplier;
     }
 
     public static Persistencia padrao() {
-        return new Persistencia(() -> CriarSessionFactory.paraH2EmMemoria("teste")
+        return new Persistencia(() -> CriarSessionFactory.paraH2EmMemoria("faq")
                                                          .comEntidadesNoPacote("faq.core")
                                                          .construirBanco()
                                                          .mostrarSQL()
                                                          .getSessionFactory());
     }
 
+    public static Persistencia comPovoador(Consumer<Session> povoador) {
+        Persistencia padrao = padrao();
+        padrao.povoador = Objects.requireNonNull(povoador);
+        return padrao;
+    }
+
     @Override
     protected void before() throws Throwable {
-        this.sessionFactory = this.supplier.get();
-        ThreadLocalSessionContext.bind(this.sessionFactory.openSession());
+        sessionFactory = this.supplier.get();
+        povoar(sessionFactory);
+        ThreadLocalSessionContext.bind(sessionFactory.openSession());
         getTransaction().begin();
     }
 
@@ -40,6 +51,14 @@ public class Persistencia extends ExternalResource {
         getSession().close();
         getSessionFactory().close();
         ThreadLocalSessionContext.unbind(sessionFactory);
+    }
+
+    private void povoar(SessionFactory sessionFactory) {
+        try (Session session = sessionFactory.openSession()) {
+            session.getTransaction().begin();
+            this.povoador.accept(session);
+            session.getTransaction().commit();
+        }
     }
 
     public SessionFactory getSessionFactory() {
