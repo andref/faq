@@ -63,11 +63,7 @@ public class QuestaoResource {
 
         questoes.persistir(questao);
 
-        URI uri = UriBuilder.fromResource(QuestaoResource.class)
-                            .path(QuestaoResource.class, "recuperarPorId")
-                            .build(questao.getId());
-
-        return Response.created(uri)
+        return Response.created(uriPara(questao))
                        .entity(new QuestaoTO(questao))
                        .build();
     }
@@ -89,11 +85,9 @@ public class QuestaoResource {
                                   .orElseThrow(NotFoundException::new);
         questaoTO.atualizar(questao);
 
-        URI uri = UriBuilder.fromResource(QuestaoResource.class)
-                            .path(QuestaoResource.class, "recuperarPorId")
-                            .build(questao.getId());
-
-        return Response.seeOther(uri).build();
+        return Response.seeOther(uriPara(questao))
+                       .entity(new QuestaoTO(questao))
+                       .build();
     }
 
     @GET
@@ -172,5 +166,11 @@ public class QuestaoResource {
                                      .orElseThrow(NotFoundException::new);
 
         questao.removerQuestaoRelacionada(relacionada);
+    }
+
+    private URI uriPara(Questao questao) {
+        return UriBuilder.fromResource(QuestaoResource.class)
+                         .path(QuestaoResource.class, "recuperarPorId")
+                         .build(questao.getId());
     }
 }

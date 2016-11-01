@@ -56,11 +56,7 @@ public class CategoriaResource {
 
         categorias.persistir(categoria);
 
-        URI uri = UriBuilder.fromResource(CategoriaResource.class)
-                            .path(CategoriaResource.class, "recuperarPorId")
-                            .build(categoria.getId());
-
-        return Response.created(uri)
+        return Response.created(uriPara(categoria))
                        .entity(new CategoriaTO(categoria))
                        .build();
     }
@@ -82,11 +78,7 @@ public class CategoriaResource {
                                         .orElseThrow(NotFoundException::new);
         categoriaTO.atualizar(categoria);
 
-        URI uri = UriBuilder.fromResource(CategoriaResource.class)
-                            .path(CategoriaResource.class, "recuperarPorId")
-                            .build(categoria.getId());
-
-        return Response.seeOther(uri)
+        return Response.seeOther(uriPara(categoria))
                        .entity(new CategoriaTO(categoria))
                        .build();
     }
@@ -102,5 +94,11 @@ public class CategoriaResource {
                         .stream()
                         .map(QuestaoTO::new)
                         .collect(Collectors.toList());
+    }
+
+    private static URI uriPara(Categoria categoria) {
+        return UriBuilder.fromResource(CategoriaResource.class)
+                         .path(CategoriaResource.class, "recuperarPorId")
+                         .build(categoria.getId());
     }
 }
