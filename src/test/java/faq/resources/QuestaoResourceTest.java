@@ -325,6 +325,45 @@ public class QuestaoResourceTest {
                             .containsExactlyElementsOf(idsEsperados);
     }
 
+    @Test
+    public void vinculaQuestãoRelacionadaÀQuestão() throws Exception {
+
+        ItemComId item = new ItemComId(povoador.questao2.getId());
+
+        Response response = target().path(povoador.questao1.getId().toString())
+                                    .path("rel")
+                                    .request()
+                                    .post(Entity.entity(item, MediaType.APPLICATION_JSON_TYPE));
+
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.SC_NO_CONTENT);
+
+        db.refresh(povoador.questao1);
+
+        assertThat(povoador.questao1.getQuestoesRelacionadas()).hasSize(2)
+                                                               .extracting(Questao::getId)
+                                                               .contains(povoador.questao2.getId());
+    }
+
+    @Test
+    public void desvinculaQuestãoRelacionadaDaQuestão() throws Exception {
+
+        Questao relacionada = povoador.questao1.getQuestoesRelacionadas().iterator().next();
+
+        Response response = target().path(povoador.questao1.getId().toString())
+                                    .path("rel")
+                                    .path(relacionada.getId().toString())
+                                    .request()
+                                    .delete();
+
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.SC_NO_CONTENT);
+
+        db.refresh(povoador.questao1);
+
+        assertThat(povoador.questao1.getQuestoesRelacionadas()).extracting(Questao::getId)
+                                                               .doesNotContain(relacionada.getId());
+    }
+
+
     private WebTarget target() {
         return client.target(format("http://localhost:%d/questoes", app.getLocalPort()));
     }
