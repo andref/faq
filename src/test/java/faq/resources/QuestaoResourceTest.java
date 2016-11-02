@@ -88,6 +88,7 @@ public class QuestaoResourceTest {
 
     @Test
     public void inserirRetornaStatusCREATED() throws Exception {
+
         Response response = target().request()
                                     .post(Entity.entity(questao, MediaType.APPLICATION_JSON_TYPE));
 
@@ -96,6 +97,7 @@ public class QuestaoResourceTest {
 
     @Test
     public void inserirRetornaCabeçalhoLocation() throws Exception {
+
         Response response = target().request()
                                     .post(Entity.entity(questao, MediaType.APPLICATION_JSON_TYPE));
 
@@ -221,7 +223,29 @@ public class QuestaoResourceTest {
     }
 
     @Test
+    public void excluirRetornaNOT_FOUNDSeAQuestãoNãoExistir() throws Exception {
+
+        Response response = target().path(UUID.randomUUID().toString())
+                                    .request()
+                                    .delete();
+
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.SC_NOT_FOUND);
+    }
+
+
+    @Test
+    public void excluirRetornaNO_CONTENTSQuandoApagaAQuestão() throws Exception {
+
+        Response response = target().path(povoador.questao3.getId().toString())
+                                    .request()
+                                    .delete();
+
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.SC_NO_CONTENT);
+    }
+
+    @Test
     public void recuperaCategoriasDeUmaQuestão() throws Exception {
+
         Response response = target().path(povoador.questao1.getId().toString())
                                     .path("categorias")
                                     .request()
@@ -243,6 +267,7 @@ public class QuestaoResourceTest {
 
     @Test
     public void vinculaCategoriaÀQuestão() throws Exception {
+
         ItemComId item = new ItemComId(povoador.categoriaImpressao.getId());
 
         Response response = target().path(povoador.questao1.getId().toString())
@@ -262,6 +287,7 @@ public class QuestaoResourceTest {
 
     @Test
     public void desvinculaCategoriaDaQuestão() throws Exception {
+
         Categoria categoria = povoador.questao1.getCategorias().iterator().next();
 
         Response response = target().path(povoador.questao1.getId().toString())
@@ -280,6 +306,7 @@ public class QuestaoResourceTest {
 
     @Test
     public void recuperaQuestõesRelacionadasDeUmaQuestão() throws Exception {
+
         Response response = target().path(povoador.questao1.getId().toString())
                                     .path("rel")
                                     .request()
