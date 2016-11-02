@@ -86,8 +86,7 @@ public class QuestaoResource {
                                   .orElseThrow(NotFoundException::new);
         questaoTO.atualizar(questao);
 
-        return Response.seeOther(uriPara(questao))
-                       .entity(new QuestaoTO(questao))
+        return Response.ok(new QuestaoTO(questao))
                        .build();
     }
 

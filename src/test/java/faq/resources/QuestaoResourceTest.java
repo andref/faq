@@ -10,6 +10,7 @@ import faq.db.Persistencia;
 import io.dropwizard.client.JerseyClientBuilder;
 import io.dropwizard.testing.junit.DropwizardAppRule;
 import org.apache.http.HttpStatus;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -17,6 +18,7 @@ import org.junit.rules.RuleChain;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -45,25 +47,32 @@ public class QuestaoResourceTest {
 
     private QuestaoTO questao;
 
+    private Client client;
+
     @Rule
     public RuleChain env = RuleChain.outerRule(db)
                                     .around(app);
 
     @Before
     public void setUp() throws Exception {
+        client = new JerseyClientBuilder(app.getEnvironment()).build(getClass().getName());
+
         questao = new QuestaoTO();
         questao.pergunta = "Como excluir uma solicitação existente?";
         questao.resposta = "Para excluir uma solicitação basta...";
         questao.autor = "João da Silva Torres";
     }
 
+    @After
+    public void tearDown() throws Exception {
+        client.close();
+    }
+
     @Test
     public void recuperaListaDeQuestões() throws Exception {
-        Client client = new JerseyClientBuilder(app.getEnvironment()).build(getClass().getName());
 
-        Response response = client.target(format("http://localhost:%d/questoes", app.getLocalPort()))
-                                  .request()
-                                  .get();
+        Response response = target().request()
+                                    .get();
 
         assertThat(response.getStatus()).isEqualTo(200);
 
@@ -79,34 +88,25 @@ public class QuestaoResourceTest {
 
     @Test
     public void inserirRetornaStatusCREATED() throws Exception {
-        Client client = new JerseyClientBuilder(app.getEnvironment()).build(getClass().getName());
-
-        Response response = client.target(format("http://localhost:%d/questoes", app.getLocalPort()))
-                                  .request()
-                                  .post(Entity.entity(questao, MediaType.APPLICATION_JSON_TYPE));
+        Response response = target().request()
+                                    .post(Entity.entity(questao, MediaType.APPLICATION_JSON_TYPE));
 
         assertThat(response.getStatus()).isEqualTo(HttpStatus.SC_CREATED);
     }
 
     @Test
     public void inserirRetornaCabeçalhoLocation() throws Exception {
-        Client client = new JerseyClientBuilder(app.getEnvironment()).build(getClass().getName());
-
-        Response response = client.target(format("http://localhost:%d/questoes", app.getLocalPort()))
-                                  .request()
-                                  .post(Entity.entity(questao, MediaType.APPLICATION_JSON_TYPE));
+        Response response = target().request()
+                                    .post(Entity.entity(questao, MediaType.APPLICATION_JSON_TYPE));
 
         assertThat(response.getHeaderString("Location")).isNotEmpty();
     }
 
     @Test
     public void inserirRetornaQuestãoCriadaNoCorpoDaResposta() throws Exception {
-        Client client = new JerseyClientBuilder(app.getEnvironment()).build(getClass().getName());
-
-        QuestaoTO response = client.target(format("http://localhost:%d/questoes", app.getLocalPort()))
-                                   .request()
-                                   .buildPost(Entity.entity(questao, MediaType.APPLICATION_JSON_TYPE))
-                                   .invoke(QuestaoTO.class);
+        QuestaoTO response = target().request()
+                                     .buildPost(Entity.entity(questao, MediaType.APPLICATION_JSON_TYPE))
+                                     .invoke(QuestaoTO.class);
 
         assertThat(response).isEqualToComparingOnlyGivenFields(questao, "pergunta", "resposta", "autor")
                             .hasFieldOrProperty("id")
@@ -115,12 +115,9 @@ public class QuestaoResourceTest {
 
     @Test
     public void inserirGravaQuestãoNoBancoDeDados() throws Exception {
-        Client client = new JerseyClientBuilder(app.getEnvironment()).build(getClass().getName());
-
-        QuestaoTO response = client.target(format("http://localhost:%d/questoes", app.getLocalPort()))
-                                   .request()
-                                   .buildPost(Entity.entity(questao, MediaType.APPLICATION_JSON_TYPE))
-                                   .invoke(QuestaoTO.class);
+        QuestaoTO response = target().request()
+                                     .buildPost(Entity.entity(questao, MediaType.APPLICATION_JSON_TYPE))
+                                     .invoke(QuestaoTO.class);
 
         Questao recuperadaDoBanco = db.get(Questao.class, response.id);
 
@@ -133,12 +130,9 @@ public class QuestaoResourceTest {
 
         questao.dataDePublicacao = LocalDate.now().minusYears(10);
 
-        Client client = new JerseyClientBuilder(app.getEnvironment()).build(getClass().getName());
-
-        QuestaoTO response = client.target(format("http://localhost:%d/questoes", app.getLocalPort()))
-                                   .request()
-                                   .buildPost(Entity.entity(questao, MediaType.APPLICATION_JSON_TYPE))
-                                   .invoke(QuestaoTO.class);
+        QuestaoTO response = target().request()
+                                     .buildPost(Entity.entity(questao, MediaType.APPLICATION_JSON_TYPE))
+                                     .invoke(QuestaoTO.class);
 
         Questao recuperadaDoBanco = db.get(Questao.class, response.id);
 
@@ -150,28 +144,88 @@ public class QuestaoResourceTest {
 
         questao.id = UUID.randomUUID();
 
-        Client client = new JerseyClientBuilder(app.getEnvironment()).build(getClass().getName());
-
-        QuestaoTO response = client.target(format("http://localhost:%d/questoes", app.getLocalPort()))
-                                   .request()
-                                   .buildPost(Entity.entity(questao, MediaType.APPLICATION_JSON_TYPE))
-                                   .invoke(QuestaoTO.class);
+        QuestaoTO response = target().request()
+                                     .buildPost(Entity.entity(questao, MediaType.APPLICATION_JSON_TYPE))
+                                     .invoke(QuestaoTO.class);
 
         Questao recuperadaDoBanco = db.get(Questao.class, response.id);
 
         assertThat(recuperadaDoBanco.getId()).isNotEqualByComparingTo(questao.id);
     }
 
+    @Test
+    public void alterarGravaAsAlteraçõesNoBancoDeDados() throws Exception {
+
+        questao.pergunta = "Esta questão foi alterada?";
+        questao.resposta = "Sim, ela foi alterada durante um teste";
+
+        QuestaoTO response = target().path(povoador.questao1.getId().toString())
+                                     .request()
+                                     .buildPut(Entity.entity(questao, MediaType.APPLICATION_JSON_TYPE))
+                                     .invoke(QuestaoTO.class);
+
+        Questao recuperadaDoBanco = db.get(Questao.class, response.id);
+
+        assertThat(recuperadaDoBanco).isEqualToComparingOnlyGivenFields(questao, "pergunta", "resposta");
+    }
+
+    @Test
+    public void alterarIgnoraDataDePublicaçãoSeForEnviada() throws Exception {
+
+        questao.dataDePublicacao = LocalDate.now().minusYears(20);
+
+        QuestaoTO response = target().path(povoador.questao1.getId().toString())
+                                     .request()
+                                     .buildPut(Entity.entity(questao, MediaType.APPLICATION_JSON_TYPE))
+                                     .invoke(QuestaoTO.class);
+
+        Questao recuperadaDoBanco = db.get(Questao.class, response.id);
+
+        assertThat(recuperadaDoBanco.getDataDePublicacao()).isNotEqualTo(questao.dataDePublicacao)
+                                                           .isEqualTo(povoador.questao1.getDataDePublicacao());
+    }
+
+    @Test
+    public void alterarRetornaOKApósAlteração() throws Exception {
+
+        questao.pergunta = "Esta questão foi alterada?";
+        questao.resposta = "Sim, ela foi alterada durante um teste";
+
+        Response response = target().path(povoador.questao1.getId().toString())
+                                    .request()
+                                    .put(Entity.entity(questao, MediaType.APPLICATION_JSON_TYPE));
+
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.SC_OK);
+    }
+
+    @Test
+    public void alterarRetornaUNPROCESSABLE_ENTITYSeAQuestãoFaltarAlgumPedaço() throws Exception {
+
+        questao.pergunta = null;
+
+        Response response = target().path(povoador.questao1.getId().toString())
+                                    .request()
+                                    .put(Entity.entity(questao, MediaType.APPLICATION_JSON_TYPE));
+
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.SC_UNPROCESSABLE_ENTITY);
+    }
+
+    @Test
+    public void alterarRetornaNOT_FOUNDSeAQuestãoNãoExistir() throws Exception {
+
+        Response response = target().path(UUID.randomUUID().toString())
+                                    .request()
+                                    .put(Entity.entity(questao, MediaType.APPLICATION_JSON_TYPE));
+
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.SC_NOT_FOUND);
+    }
 
     @Test
     public void recuperaCategoriasDeUmaQuestão() throws Exception {
-        Client client = new JerseyClientBuilder(app.getEnvironment()).build(getClass().getName());
-
-        Response response = client.target(format("http://localhost:%d/questoes", app.getLocalPort()))
-                                  .path(povoador.questao1.getId().toString())
-                                  .path("categorias")
-                                  .request()
-                                  .get();
+        Response response = target().path(povoador.questao1.getId().toString())
+                                    .path("categorias")
+                                    .request()
+                                    .get();
 
         assertThat(response.getStatus()).isEqualTo(200);
 
@@ -186,17 +240,15 @@ public class QuestaoResourceTest {
                             .containsExactlyElementsOf(idsEsperados);
     }
 
+
     @Test
     public void vinculaCategoriaÀQuestão() throws Exception {
-        Client client = new JerseyClientBuilder(app.getEnvironment()).build(getClass().getName());
-
         ItemComId item = new ItemComId(povoador.categoriaImpressao.getId());
 
-        Response response = client.target(format("http://localhost:%d/questoes", app.getLocalPort()))
-                                  .path(povoador.questao1.getId().toString())
-                                  .path("categorias")
-                                  .request()
-                                  .post(Entity.entity(item, MediaType.APPLICATION_JSON_TYPE));
+        Response response = target().path(povoador.questao1.getId().toString())
+                                    .path("categorias")
+                                    .request()
+                                    .post(Entity.entity(item, MediaType.APPLICATION_JSON_TYPE));
 
         assertThat(response.getStatus()).isEqualTo(HttpStatus.SC_NO_CONTENT);
 
@@ -210,16 +262,13 @@ public class QuestaoResourceTest {
 
     @Test
     public void desvinculaCategoriaDaQuestão() throws Exception {
-        Client client = new JerseyClientBuilder(app.getEnvironment()).build(getClass().getName());
-
         Categoria categoria = povoador.questao1.getCategorias().iterator().next();
 
-        Response response = client.target(format("http://localhost:%d/questoes", app.getLocalPort()))
-                                  .path(povoador.questao1.getId().toString())
-                                  .path("categorias")
-                                  .path(categoria.getId().toString())
-                                  .request()
-                                  .delete();
+        Response response = target().path(povoador.questao1.getId().toString())
+                                    .path("categorias")
+                                    .path(categoria.getId().toString())
+                                    .request()
+                                    .delete();
 
         assertThat(response.getStatus()).isEqualTo(HttpStatus.SC_NO_CONTENT);
 
@@ -231,13 +280,10 @@ public class QuestaoResourceTest {
 
     @Test
     public void recuperaQuestõesRelacionadasDeUmaQuestão() throws Exception {
-        Client client = new JerseyClientBuilder(app.getEnvironment()).build(getClass().getName());
-
-        Response response = client.target(format("http://localhost:%d/questoes", app.getLocalPort()))
-                                  .path(povoador.questao1.getId().toString())
-                                  .path("rel")
-                                  .request()
-                                  .get();
+        Response response = target().path(povoador.questao1.getId().toString())
+                                    .path("rel")
+                                    .request()
+                                    .get();
 
         assertThat(response.getStatus()).isEqualTo(200);
 
@@ -250,5 +296,9 @@ public class QuestaoResourceTest {
 
         assertThat(questoes).extracting(Questao::getId)
                             .containsExactlyElementsOf(idsEsperados);
+    }
+
+    private WebTarget target() {
+        return client.target(format("http://localhost:%d/questoes", app.getLocalPort()));
     }
 }

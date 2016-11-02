@@ -27,7 +27,6 @@ public class Persistencia extends ExternalResource {
         return new Persistencia(() -> CriarSessionFactory.paraH2EmMemoria("faq")
                                                          .comEntidadesNoPacote("faq.core")
                                                          .construirBanco()
-                                                         .mostrarSQL()
                                                          .getSessionFactory());
     }
 
