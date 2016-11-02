@@ -11,6 +11,7 @@ import faq.db.Questoes;
 import io.dropwizard.hibernate.UnitOfWork;
 
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -57,7 +58,7 @@ public class QuestaoResource {
 
     @POST
     @UnitOfWork
-    public Response inserir(@Valid QuestaoTO questaoTO) {
+    public Response inserir(@Valid @NotNull QuestaoTO questaoTO) {
         Questao questao = questaoTO.atualizar(new Questao());
         questao.setDataDePublicacao(LocalDate.now());
 
@@ -80,7 +81,7 @@ public class QuestaoResource {
     @PUT
     @UnitOfWork
     @Path("{id}")
-    public Response alterar(@PathParam("id") UUID id, @Valid QuestaoTO questaoTO) {
+    public Response alterar(@PathParam("id") UUID id, @Valid @NotNull QuestaoTO questaoTO) {
         Questao questao = questoes.porId(id)
                                   .orElseThrow(NotFoundException::new);
         questaoTO.atualizar(questao);
@@ -106,7 +107,7 @@ public class QuestaoResource {
     @POST
     @UnitOfWork
     @Path("{id}/categorias")
-    public void vincularCategoria(@PathParam("id") UUID id, @Valid ItemComId item) {
+    public void vincularCategoria(@PathParam("id") UUID id, @Valid @NotNull ItemComId item) {
         Questao questao = questoes.porId(id)
                                   .orElseThrow(NotFoundException::new);
         Categoria categoria = categorias.porId(item.id)
@@ -124,7 +125,7 @@ public class QuestaoResource {
 
         Categoria categoria = questao.getCategorias()
                                      .stream()
-                                     .filter(t -> t.getId() == idCategoria)
+                                     .filter(t -> t.getId().equals(idCategoria))
                                      .findFirst()
                                      .orElseThrow(NotFoundException::new);
 
@@ -144,7 +145,7 @@ public class QuestaoResource {
     @POST
     @UnitOfWork
     @Path("{id}/rel")
-    public void vincularRelacionada(@PathParam("id") UUID id, @Valid ItemComId item) {
+    public void vincularRelacionada(@PathParam("id") UUID id, @Valid @NotNull ItemComId item) {
         Questao questao = questoes.porId(id)
                                   .orElseThrow(NotFoundException::new);
         Questao relacionada = questoes.porId(item.id)
@@ -161,7 +162,7 @@ public class QuestaoResource {
 
         Questao relacionada = questao.getQuestoesRelacionadas()
                                      .stream()
-                                     .filter(t -> t.getId() == idRelacionada)
+                                     .filter(t -> t.getId().equals(idRelacionada))
                                      .findFirst()
                                      .orElseThrow(NotFoundException::new);
 

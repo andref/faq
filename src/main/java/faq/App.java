@@ -1,9 +1,9 @@
 package faq;
 
-import faq.db.Questoes;
 import faq.db.Categorias;
-import faq.resources.QuestaoResource;
+import faq.db.Questoes;
 import faq.resources.CategoriaResource;
+import faq.resources.QuestaoResource;
 import io.dropwizard.Application;
 import io.dropwizard.db.PooledDataSourceFactory;
 import io.dropwizard.hibernate.ScanningHibernateBundle;
