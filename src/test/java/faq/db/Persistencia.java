@@ -100,6 +100,13 @@ public class Persistencia extends ExternalResource {
         }
     }
 
+    public void refresh(Object... entities) {
+        Session session = getSession();
+        for (Object entity : entities) {
+            session.refresh(entity);
+        }
+    }
+
     public void flushAndClear() {
         Session session = getSession();
         session.flush();

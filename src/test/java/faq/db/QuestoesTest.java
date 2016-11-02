@@ -145,4 +145,29 @@ public class QuestoesTest {
 
         assertThat(optQuestao).isEmpty();
     }
+
+    @Test
+    public void excluirRemoveQuestãoDaListaDeRelacionadasDeOutrasQuestões() throws Exception {
+        Questao questao1 = criar.questaoComPergunta("P1?");
+        Questao questao2 = criar.questaoComPergunta("P2?");
+        Questao relacionada = criar.questaoComPergunta("R?");
+
+        questao1.adicionarQuestaoRelacionada(relacionada);
+        questao2.adicionarQuestaoRelacionada(relacionada);
+
+        db.persistFlushAndClear(questao1, questao2, relacionada);
+
+        Questao recuperada = questoes.porId(relacionada.getId()).orElseThrow(AssertionError::new);
+
+        questoes.excluir(recuperada);
+
+        db.flushAndClear();
+
+        db.refresh(questao1, questao2);
+
+        assertThat(questao1.getQuestoesRelacionadas()).extracting(Questao::getId)
+                                                      .doesNotContain(relacionada.getId());
+        assertThat(questao2.getQuestoesRelacionadas()).extracting(Questao::getId)
+                                                      .doesNotContain(relacionada.getId());
+    }
 }

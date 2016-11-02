@@ -2,7 +2,9 @@ package faq.db;
 
 import faq.core.Questao;
 import io.dropwizard.hibernate.AbstractDAO;
+import org.hibernate.Criteria;
 import org.hibernate.SessionFactory;
+import org.hibernate.criterion.Restrictions;
 
 import java.util.List;
 import java.util.Optional;
@@ -27,6 +29,10 @@ public class Questoes extends AbstractDAO<Questao> {
     }
 
     public void excluir(Questao questao) {
+        Criteria criteria = criteria();
+        criteria.createCriteria("questoesRelacionadas")
+                .add(Restrictions.idEq(questao.getId()));
+        list(criteria).forEach(q -> q.removerQuestaoRelacionada(questao));
         currentSession().delete(questao);
     }
 }
