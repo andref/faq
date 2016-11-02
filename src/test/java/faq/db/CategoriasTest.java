@@ -2,6 +2,7 @@ package faq.db;
 
 import faq.core.Categoria;
 import faq.core.ObjetosDeTeste;
+import faq.core.Questao;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -88,6 +89,7 @@ public class CategoriasTest {
 
         thrown.expect(org.hibernate.exception.ConstraintViolationException.class);
     }
+
     @Test
     public void porIdRecuperaCategoriaCorretamente() throws Exception {
         Categoria categoria = criar.categoria();
@@ -103,7 +105,7 @@ public class CategoriasTest {
     }
 
     @Test
-    public void excluirRemoveQuestãoDoBancoDeDados() throws Exception {
+    public void excluirRemoveCategoriaDoBancoDeDados() throws Exception {
         Categoria categoria = criar.categoria();
         categorias.persistir(categoria);
 
@@ -118,5 +120,31 @@ public class CategoriasTest {
         Optional<Categoria> optCategoria = categorias.porId(categoria.getId());
 
         assertThat(optCategoria).isEmpty();
+    }
+
+    @Test
+    public void excluirRemoveCategoriaDasQuestõesAQueFoiVinculada() throws Exception {
+        Questao questao1 = criar.questaoComPergunta("P1?");
+        Questao questao2 = criar.questaoComPergunta("P2?");
+        Categoria categoria = criar.categoria();
+
+        questao1.adicionarCategoria(categoria);
+        questao2.adicionarCategoria(categoria);
+
+        db.persistFlushAndClear(questao1, questao2, categoria);
+
+        db.refresh(categoria);
+
+        categorias.excluir(categoria);
+
+        db.flushAndClear();
+
+        db.refresh(questao1, questao2);
+
+        assertThat(questao1.getCategorias()).extracting(Categoria::getId)
+                                            .doesNotContain(categoria.getId());
+        assertThat(questao2.getCategorias()).extracting(Categoria::getId)
+                                            .doesNotContain(categoria.getId());
+
     }
 }

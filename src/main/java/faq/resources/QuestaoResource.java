@@ -40,7 +40,7 @@ public class QuestaoResource {
     @GET
     @Timed
     @UnitOfWork(readOnly = true)
-    public List<QuestaoTO> recuperarTodas() {
+    public List<QuestaoTO> listar() {
         return questoes.listar()
                        .stream()
                        .map(QuestaoTO::new)

@@ -33,7 +33,7 @@ public class CategoriaResource {
     @GET
     @Timed
     @UnitOfWork(readOnly = true)
-    public List<CategoriaTO> recuperarTodos() {
+    public List<CategoriaTO> listar() {
         return categorias.listar()
                          .stream()
                          .map(CategoriaTO::new)
@@ -77,9 +77,7 @@ public class CategoriaResource {
         Categoria categoria = categorias.porId(id)
                                         .orElseThrow(NotFoundException::new);
         categoriaTO.atualizar(categoria);
-
-        return Response.seeOther(uriPara(categoria))
-                       .entity(new CategoriaTO(categoria))
+        return Response.ok(new CategoriaTO(categoria))
                        .build();
     }
 
