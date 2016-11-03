@@ -6,10 +6,9 @@ server:
 
 database:
   driverClass: org.h2.Driver
-  url: jdbc:h2:mem:faq
+  url: jdbc:h2:./db/faq
   validationQuery: select 1
   checkConnectionWhileIdle: true
   properties:
-    hibernate.hbm2ddl.auto: create
     hibernate.show_sql: true
     hibernate.format_sql: true

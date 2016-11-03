@@ -26,7 +26,7 @@ public class Categoria {
     @Column(length = 1000)
     private String descricao;
 
-    @ManyToMany
+    @ManyToMany(mappedBy = "categorias")
     List<Questao> questoes = new ArrayList<>();
 
     public UUID getId() {
