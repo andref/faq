@@ -32,6 +32,7 @@ public class Questao {
     private String resposta;
 
     @ManyToMany
+    @JoinTable(name = "questao_relacionada")
     private List<Questao> questoesRelacionadas = new ArrayList<>();
 
     @ManyToMany
