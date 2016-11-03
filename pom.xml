@@ -19,6 +19,18 @@
     <hibernate.version>5.1.0.Final</hibernate.version>
   </properties>
 
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>io.dropwizard</groupId>
+        <artifactId>dropwizard-bom</artifactId>
+        <version>${dropwizard.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
   <dependencies>
 
     <dependency>
@@ -70,20 +82,9 @@
 
   </dependencies>
 
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>io.dropwizard</groupId>
-        <artifactId>dropwizard-bom</artifactId>
-        <version>${dropwizard.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
-
   <build>
     <plugins>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -93,7 +94,97 @@
           <target>1.8</target>
         </configuration>
       </plugin>
+
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.0.2</version>
+        <configuration>
+          <archive>
+            <manifest>
+              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+            </manifest>
+            <manifestEntries>
+              <Implementation-Build>${buildNumber}</Implementation-Build>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>2.4.3</version>
+        <configuration>
+          <createDependencyReducedPom>false</createDependencyReducedPom>
+          <filters>
+            <filter>
+              <artifact>*:*</artifact>
+              <excludes>
+                <exclude>META-INF/*.SF</exclude>
+                <exclude>META-INF/*.DSA</exclude>
+                <exclude>META-INF/*.RSA</exclude>
+                <exclude>META-INF/LICENSE*</exclude>
+                <exclude>META-INF/NOTICE*</exclude>
+                <exclude>META-INF/README*</exclude>
+                <exclude>about.html</exclude>
+                <exclude>asm-license.txt</exclude>
+                <exclude>license/*</exclude>
+                <exclude>NOTICE*</exclude>
+                <exclude>LICENSE*</exclude>
+              </excludes>
+            </filter>
+          </filters>
+          <transformers>
+            <transformer
+                implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+            <transformer
+                implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+              <mainClass>faq.App</mainClass>
+            </transformer>
+          </transformers>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>buildnumber-maven-plugin</artifactId>
+        <version>1.4</version>
+        <executions>
+          <execution>
+            <id>Adicionar informações do Git ao artefato</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>create</goal>
+              <goal>create-metadata</goal>
+            </goals>
+            <configuration>
+              <attach>true</attach>
+              <timestampFormat>yyyy-MM-dd'T'HH:mm:ss</timestampFormat>
+              <addOutputDirectoryToResources>true</addOutputDirectoryToResources>
+            </configuration>
+          </execution>
+        </executions>
+        <configuration>
+          <shortRevisionLength>8</shortRevisionLength>
+          <getRevisionOnlyOnce>true</getRevisionOnlyOnce>
+        </configuration>
+      </plugin>
+
     </plugins>
   </build>
+
+  <scm>
+    <tag>HEAD</tag>
+    <url>https://github.com/andref/questoes</url>
+    <connection>scm:git:https://github.com/andref/questoes.git</connection>
+    <developerConnection>scm:git:https://github.com/andref/questoes.git</developerConnection>
+  </scm>
 
 </project>
