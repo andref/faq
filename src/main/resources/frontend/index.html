@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>FAQ</title>
+    <link rel="stylesheet" type="text/css" charset="utf-8" href="/app/style.css">
+</head>
+<body ng-app="faq">
+
+    <div id="categorias" ng-controller="CategoriaController as ctrl">
+        <div ng-repeat="categoria in ctrl.categorias" title="{{categoria.descricao}}">
+            {{ categoria.titulo }}
+        </div>
+    </div>
+    <div id="principal"></div>
+
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.8/angular.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.8/angular-resource.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.8/angular-animate.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/angular-ui-router/1.0.0-beta.3/angular-ui-router.js"></script>
+    <script src="/app/faq.js"></script>
+</body>
+</html>
