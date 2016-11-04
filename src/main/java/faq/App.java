@@ -5,6 +5,7 @@ import faq.db.Questoes;
 import faq.resources.CategoriaResource;
 import faq.resources.QuestaoResource;
 import io.dropwizard.Application;
+import io.dropwizard.assets.AssetsBundle;
 import io.dropwizard.db.PooledDataSourceFactory;
 import io.dropwizard.flyway.FlywayBundle;
 import io.dropwizard.hibernate.ScanningHibernateBundle;
@@ -32,6 +33,7 @@ public class App extends Application<AppConfig> {
     public void initialize(Bootstrap<AppConfig> bootstrap) {
         bootstrap.addBundle(hibernate);
         bootstrap.addBundle(flyway);
+        bootstrap.addBundle(new AssetsBundle("/frontend", "/app", "index.html"));
     }
 
     @Override
