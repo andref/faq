@@ -13,11 +13,17 @@
   </prerequisites>
 
   <properties>
+
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <dropwizard.version>1.0.2</dropwizard.version>
     <hibernate.version>5.1.0.Final</hibernate.version>
     <flyway.version>0.9.0-1</flyway.version>
+
+    <faq.user>faq</faq.user>
+    <faq.group>faq</faq.group>
+    <faq.home>/home/faq</faq.home>
+
   </properties>
 
   <dependencyManagement>
@@ -90,7 +96,46 @@
   </dependencies>
 
   <build>
+
+    <finalName>${project.artifactId}</finalName>
+
+    <resources>
+      <resource>
+        <directory>src/main/rpm</directory>
+        <filtering>true</filtering>
+      </resource>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>false</filtering>
+      </resource>
+    </resources>
+
     <plugins>
+
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>buildnumber-maven-plugin</artifactId>
+        <version>1.4</version>
+        <executions>
+          <execution>
+            <id>Adicionar informações do Git ao artefato</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>create</goal>
+              <goal>create-metadata</goal>
+            </goals>
+            <configuration>
+              <attach>true</attach>
+              <timestampFormat>yyyy-MM-dd'T'HH:mm:ss</timestampFormat>
+              <addOutputDirectoryToResources>true</addOutputDirectoryToResources>
+            </configuration>
+          </execution>
+        </executions>
+        <configuration>
+          <shortRevisionLength>8</shortRevisionLength>
+          <getRevisionOnlyOnce>true</getRevisionOnlyOnce>
+        </configuration>
+      </plugin>
 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -161,26 +206,82 @@
 
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
-        <artifactId>buildnumber-maven-plugin</artifactId>
-        <version>1.4</version>
-        <executions>
-          <execution>
-            <id>Adicionar informações do Git ao artefato</id>
-            <phase>generate-resources</phase>
-            <goals>
-              <goal>create</goal>
-              <goal>create-metadata</goal>
-            </goals>
-            <configuration>
-              <attach>true</attach>
-              <timestampFormat>yyyy-MM-dd'T'HH:mm:ss</timestampFormat>
-              <addOutputDirectoryToResources>true</addOutputDirectoryToResources>
-            </configuration>
-          </execution>
-        </executions>
+        <artifactId>rpm-maven-plugin</artifactId>
+        <version>2.1.5</version>
         <configuration>
-          <shortRevisionLength>8</shortRevisionLength>
-          <getRevisionOnlyOnce>true</getRevisionOnlyOnce>
+          <name>faq</name>
+          <group>ALMG</group>
+          <defaultGroupname>${faq.group}</defaultGroupname>
+          <defaultUsername>${faq.user}</defaultUsername>
+          <defaultFilemode>664</defaultFilemode>
+          <summary>Aplicação FAQ</summary>
+          <description>
+            FAQ é uma aplicação usada como exemplo num treinamento sobre tecnologias do Sisap Web.
+          </description>
+          <requires>
+            <require>java-1.8.0</require>
+            <require>systemd</require>
+          </requires>
+          <preinstallScriptlet>
+            <scriptFile>${project.build.outputDirectory}/preinstall.sh</scriptFile>
+            <fileEncoding>utf-8</fileEncoding>
+          </preinstallScriptlet>
+          <postinstallScriptlet>
+            <scriptFile>${project.build.outputDirectory}/postinstall.sh</scriptFile>
+            <fileEncoding>utf-8</fileEncoding>
+          </postinstallScriptlet>
+          <preremoveScriptlet>
+            <scriptFile>${project.build.outputDirectory}/preuninstall.sh</scriptFile>
+            <fileEncoding>utf-8</fileEncoding>
+          </preremoveScriptlet>
+          <postremoveScriptlet>
+            <scriptFile>${project.build.outputDirectory}/postuninstall.sh</scriptFile>
+            <fileEncoding>utf-8</fileEncoding>
+          </postremoveScriptlet>
+          <mappings>
+            <mapping>
+              <directory>${faq.home}/bin</directory>
+              <filemode>775</filemode>
+              <sources>
+                <source>
+                  <location>${project.build.outputDirectory}/bin</location>
+                </source>
+              </sources>
+              <recurseDirectories>true</recurseDirectories>
+            </mapping>
+            <mapping>
+              <directory>${faq.home}/etc</directory>
+              <sources>
+                <source>
+                  <location>${project.build.outputDirectory}/etc</location>
+                </source>
+              </sources>
+              <configuration>noreplace</configuration>
+              <recurseDirectories>true</recurseDirectories>
+            </mapping>
+            <mapping>
+              <directory>${faq.home}/lib</directory>
+              <artifact />
+            </mapping>
+            <mapping>
+              <directory>${faq.home}/log</directory>
+            </mapping>
+            <mapping>
+              <directory>${faq.home}/var</directory>
+            </mapping>
+            <mapping>
+              <directory>/usr/lib/systemd/system</directory>
+              <directoryIncluded>false</directoryIncluded>
+              <sources>
+                <source>
+                  <location>${project.build.outputDirectory}/systemd</location>
+                </source>
+              </sources>
+              <username>root</username>
+              <groupname>root</groupname>
+              <recurseDirectories>false</recurseDirectories>
+            </mapping>
+          </mappings>
         </configuration>
       </plugin>
 

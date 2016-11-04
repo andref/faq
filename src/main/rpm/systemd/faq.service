@@ -1,0 +1,17 @@
+[Unit]
+Description=FAQ
+
+[Service]
+Type=simple
+User=${faq.user}
+Group=${faq.group}
+EnvironmentFile=${faq.home}/etc/environment
+WorkingDirectory=${faq.home}
+ExecStart=/usr/bin/java $JVM_OPTIONS -jar ${faq.home}/lib/faq.jar server ${faq.home}/etc/config.yaml
+SuccessExitStatus=143
+Restart=always
+RestartSec=10
+TimeoutSec=5
+
+[Install]
+WantedBy=multi-user.target

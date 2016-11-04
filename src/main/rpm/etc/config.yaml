@@ -1,0 +1,33 @@
+server:
+    applicationConnectors:
+      - type: http
+        bindHost: 127.0.0.1
+        port: 8080
+    adminConnectors:
+      - type: http
+        bindHost: 127.0.0.1
+        port: 8081
+    requestLog:
+        appenders:
+          - type: file
+            currentLogFilename: "${faq.home}/log/requests.log"
+            archivedLogFilenamePattern: "${faq.home}/log/requests-%d.log"
+            archivedFileCount: 10
+
+database:
+  driverClass: org.h2.Driver
+  url: jdbc:h2:${faq.home}/var/faq
+  validationQuery: select 1
+  checkConnectionWhileIdle: true
+  properties:
+    hibernate.show_sql: true
+    hibernate.format_sql: true
+
+logging:
+  level: INFO
+  appenders:
+    - type: file
+      currentLogFilename: "${faq.home}/log/faq.log"
+      archive: true
+      archivedLogFilenamePattern: "${faq.home}/log/faq-%d.log"
+      archivedFileCount: 5

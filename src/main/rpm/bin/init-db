@@ -1,0 +1,5 @@
+#!/bin/bash
+
+set -e
+
+/usr/bin/java -jar ${faq.home}/lib/faq.jar db migrate ${faq.home}/etc/config.yaml
