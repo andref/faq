@@ -1,5 +1,6 @@
 package faq;
 
+import com.codahale.metrics.JmxReporter;
 import faq.db.Categorias;
 import faq.db.Questoes;
 import faq.resources.CategoriaResource;
@@ -28,11 +29,17 @@ public class App extends Application<AppConfig> {
     @Override
     public void run(AppConfig configuration, Environment environment) throws Exception {
         SessionFactory sessionFactory = hibernate.getSessionFactory();
+
         Questoes questoes = new Questoes(sessionFactory);
         Categorias categorias = new Categorias(sessionFactory);
 
         environment.jersey().register(new QuestaoResource(questoes, categorias));
         environment.jersey().register(new CategoriaResource(categorias));
+
+        JmxReporter reporter = JmxReporter.forRegistry(environment.metrics())
+                                          .build();
+
+        environment.lifecycle().manage(new ManagedJmxReporter(reporter));
     }
 
     public static void main(String[] args) throws Exception {
